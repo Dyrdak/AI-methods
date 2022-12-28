@@ -1,0 +1,63 @@
+function s = gen_echo(type)
+T = 2;
+fd = 80000; % частота дискритезации
+fs = 20000; % частота сигнала
+c = 1500; % скорость зввука в воде
+d = 0.03; % расстояние между приёмо-излучающими элементами
+r = 500 + 500*rand(1); % генерация случайного значения расстояния до объекта
+alpha = 60*rand(1)-30; % генерация случайного значения угла поворота объекта
+
+s = randn(2,T*fd)/100; % генерация зашумленного сигнала
+
+% points = [];
+
+switch type % выбор алгоритма исходя из типа объекта
+    case 1 % ПЛ
+        phi = 360*rand(1); % генерация случайного значения азимута объекта относительно антенны
+        for i=1:5 % цикл создания бликов объекта
+            x = r*sind(alpha) + 20*i*sind(phi); % вычисление координаты x объекта при учете переноса системы координат и повороте
+            y = r*cosd(alpha) + 20*i*cosd(phi); % вычисление координаты y объекта при учете переноса системы координат и повороте
+            r_blink = sqrt(x^2 + y^2);  % вычисление дистанции до блика
+            phi_blink = atand(x/y); %  % вычисление азимута блика
+            n1 = floor(r_blink / c * fd); % вычисление первого отсчета блика в сигнале
+            n2 = floor(n1 + 0.001 * fd); % вычисление последнего отсчета блика в сигнале
+            dphi = 2 * pi * fs * d / c * sind(phi_blink); % вычисление разности фаз между приемными устройствами
+            s(1,n1:n2) = s(1,n1:n2) + sin(2*pi*fs*(n1:n2)/fd); % запись блика в сигнал для первого приемника
+            s(2,n1:n2) = s(2,n1:n2) + sin(2*pi*fs*(n1:n2)/fd + dphi); % запись блика в сигнал для второго приемника (с учетом разности фаз)
+
+%             points = [points [x; y]];
+        end
+    case 2 % Имитатор
+        phi = alpha;
+        for i=1:3
+            x = r*sind(alpha) + 10*i*sind(phi);
+            y = r*cosd(alpha) + 10*i*cosd(phi);
+            r_blink = sqrt(x^2 + y^2);
+            phi_blink = atan(x/y);
+            n1 = floor(r_blink / c * fd);
+            n2 = floor(n1 + 0.001 * fd);
+            dphi = 2 * pi * fs * d / c * sind(phi_blink);
+            s(1,n1:n2) = s(1,n1:n2) + sin(2*pi*fs*(n1:n2)/fd);
+            s(2,n1:n2) = s(2,n1:n2) + sin(2*pi*fs*(n1:n2)/fd + dphi);
+
+%             points = [points [x; y]];
+        end
+    case 3 % облако имитаторов
+        for i=1:20
+            x = r*sind(alpha) + 220*rand(1);
+            y = r*cosd(alpha) + 220*rand(1);
+            r_blink = sqrt(x^2 + y^2);
+            phi_blink = atan(x/y);
+            n1 = floor(r_blink / c * fd);
+            n2 = floor(n1 + 0.001 * fd);
+            dphi = 2 * pi * fs * d / c * sind(phi_blink);
+            s(1,n1:n2) = s(1,n1:n2) + sin(2*pi*fs*(n1:n2)/fd);
+            s(2,n1:n2) = s(2,n1:n2) + sin(2*pi*fs*(n1:n2)/fd + dphi);
+
+%             points = [points [x; y]];
+        end
+end
+
+% figure, plot(points(1,:),points(2,:),"or")
+% hold on;
+% axis([-1000 1000 0 1000 ]);

@@ -1,0 +1,56 @@
+clear;
+close all;
+clc;
+
+P = []; % массив параметров для обучения нейросети
+T = []; % массив правильных типов для обучения нейросети
+
+iters = 1000;  % количество генерируемых объектов
+nncorr = 0; % переменная для накопления количества правильных определений типа нейросейтью
+fcorr = 0; % переменная для накопления количества правильных определений типа нечеткйо логикой
+
+load net.mat % загрузка объекта обученной нейросети
+load fuzzy.mat % загрузка объекта алгоритма нечёткой логики
+
+for i=1:iters % цикл для создания и обработки объектов 
+
+    type = randi(3); % случайный выбор типа объекта (ПЛ, Имитатор, Облако отражателей)
+    s = gen_echo(type); % функция генерации эхосигнала
+    blinks = proc_echo(s); % функция обработки эхосигнала (получение точек параметров отраженных точек)
+    params = proc_blinks(blinks); % фукция вычисления параметров объекта (длина, ширина, угол)
+
+    if (1)
+        new_type = net.Network(params'); % вычисление типа 
+        [nnm,nnt] = max(new_type);
+
+        fuz_type = evalfis(params',fuzzy);
+        [fm,ft] = max(fuz_type);
+
+        if ft==type
+%             disp('OK')
+            fcorr = fcorr + 1;
+        else
+%             disp('Error')
+        end
+
+        if nnt==type
+%             disp('OK')
+            nncorr = nncorr + 1;
+        else
+%             disp('Error')
+        end
+    end
+%     
+    if isnan(params(1))
+%         disp('NaN')
+    else
+        P = [P; params];
+        class = [0 0 0];
+        class(type) = 1;
+        T = [T; class];
+    end
+
+end
+
+disp('ВПК (NN) = '+string(nncorr/iters*100)+' %');
+disp('ВПК (FUZ) = '+string(fcorr/iters*100)+' %');
