@@ -1,2 +1,4 @@
 # AI-methods
-Classification model
+Classification model 
+Dyrdak
+3260 
